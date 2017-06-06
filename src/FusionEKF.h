@@ -31,6 +31,12 @@ public:
   */
   KalmanFilter ekf_;
 
+  enum Mode {
+      MODE_LASER,
+      MODE_RADAR,
+      MODE_FUSION
+  };
+
 private:
   // check whether the tracking toolbox was initialized or not (first measurement)
   bool is_initialized_;
