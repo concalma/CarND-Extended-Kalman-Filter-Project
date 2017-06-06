@@ -32,7 +32,6 @@ FusionEKF::FusionEKF() {
              0, 0, 0.09;
 
     /**
-TODO:
      * Finish initializing the FusionEKF.
      * Set the process and measurement noises
      */
@@ -56,6 +55,7 @@ FusionEKF::~FusionEKF() {}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
+    // cout << measurement_pack.raw_measurements_ << endl;
 
     /*****************************************************************************
      *  Initialization
@@ -73,18 +73,16 @@ TODO:
         cout << "EKF: " << endl;
         ekf_.x_ = VectorXd(4);
         ekf_.x_ << 1, 1, 1, 1;
-        // state covariance matrix P
+
+        // state covariance matrix P. We use placeholder values '1' for speed, '1000' for uncertainty in velocity
         ekf_.P_ = MatrixXd(4, 4);
         ekf_.P_ << 1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1000, 0,
             0, 0, 0, 1000;
 
-        ekf_.Q_ << 0,0,0,0,
-            0,0,0,0,
-            0,0,0,0,
-            0,0,0,0;
-
+        
+        // Updating first state directly with first measurement
         if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
             /**
               Convert radar from polar to cartesian coordinates and initialize state.
@@ -107,6 +105,7 @@ TODO:
 
         // done initializing, no need to predict or update
         is_initialized_ = true;
+        previous_timestamp_ = measurement_pack.timestamp_;
         return;
     }
 
@@ -115,14 +114,13 @@ TODO:
      ****************************************************************************/
 
     /**
-TODO:
      * Update the state transition matrix F according to the new elapsed time.
      - Time is measured in seconds.
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
      */
 
-    // if first time around take measurement as is. Consider dt=0. This triggers F = Id and Q =0 first time around
+    // if no previous timestamp take measurement as is. Consider dt=0. This triggers F = Id and Q =0 first time around
     float dt = 0;
     if( previous_timestamp_ != 0 ) {
         //compute the time elapsed between the current and previous measurements
@@ -136,6 +134,7 @@ TODO:
     float dt_4 = dt_3 * dt;
 
     //Modify the F matrix so that the time is integrated
+    // this assumes proper initialization to 1s in constructor
     ekf_.F_(0, 2) = dt;
     ekf_.F_(1, 3) = dt;
 
@@ -156,20 +155,21 @@ TODO:
      ****************************************************************************/
 
     /**
-TODO:
      * Use the sensor type to perform the update step.
      * Update the state and covariance matrices.
      */
 
-    if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-        // Radar updates
-        ekf_.R_ = R_radar_;
-        ekf_.UpdateEKF( measurement_pack.raw_measurements_);
-    } else {
-        // Laser updates
-        ekf_.H_ = H_laser_;
-        ekf_.R_ = R_laser_;
-        ekf_.Update(measurement_pack.raw_measurements_);
+    switch(measurement_pack.sensor_type_) {
+        case MeasurementPackage::RADAR:
+            ekf_.R_ = R_radar_;
+            // Jacobian calculation and h(x) is done inside KarmanFilter class
+            ekf_.UpdateEKF( measurement_pack.raw_measurements_);
+            break;
+        case MeasurementPackage::LASER:
+            ekf_.H_ = H_laser_;
+            ekf_.R_ = R_laser_;
+            ekf_.Update(measurement_pack.raw_measurements_);
+            break;
     }
 
     // print the output

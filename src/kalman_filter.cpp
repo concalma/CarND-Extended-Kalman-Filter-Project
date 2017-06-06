@@ -10,23 +10,12 @@ KalmanFilter::KalmanFilter() {}
 
 KalmanFilter::~KalmanFilter() {}
 
-void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
-                        MatrixXd &H_in, MatrixXd &R_in, MatrixXd &Q_in) {
-  x_ = x_in;
-  P_ = P_in;
-  F_ = F_in;
-  H_ = H_in;
-  R_ = R_in;
-  Q_ = Q_in;
-}
-
 
 void KalmanFilter::Predict() {
   /**
-   TODO
     * predict the state
   */
-  // F_ must be updated before calling this
+  // F_ and Q_  must be updated before calling this
   x_ = F_ * x_;
   P_ = F_ * P_ * F_.transpose() + Q_;
 
@@ -34,8 +23,8 @@ void KalmanFilter::Predict() {
 
 void KalmanFilter::Update(const VectorXd &z) {
     /**
-TODO:
      * update the state by using Kalman Filter equations
+     * H_ and R_ must be set before this
      */
     VectorXd z_pred = H_ * x_;
     VectorXd y = z - z_pred;
@@ -52,6 +41,7 @@ TODO:
     P_ = (I - K * H_) * P_;
 }
 
+/* EKF measurement function */
 VectorXd KalmanFilter::EKF_h(VectorXd &x_state) {
     VectorXd ret = VectorXd(3);
 
@@ -70,8 +60,9 @@ VectorXd KalmanFilter::EKF_h(VectorXd &x_state) {
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
-  TODO:
     * update the state by using Extended Kalman Filter equations
+    *
+    * R_ must be set before this. Hj_ is calculated here
   */
 
     MatrixXd Hj_ = tools.CalculateJacobian(x_);
