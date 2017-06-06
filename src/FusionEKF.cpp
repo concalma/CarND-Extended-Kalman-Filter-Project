@@ -153,10 +153,10 @@ TODO:
     /*****************************************************************************
      *  Update
      ****************************************************************************/
-    // comment out desired mode
-    //Mode mode = MODE_RADAR;
-    //Mode mode = MODE_LASER;
-    Mode mode = MODE_FUSION;
+    // comment out desired mode. See images folder for resuls
+    //Mode mode = MODE_RADAR;  // <0.34 RMSE on position
+    //Mode mode = MODE_LASER;  // <0.14 RMSE on position
+    Mode mode = MODE_FUSION;   //<<0.09 RMSE on position. Clearly FUSION sensors is better! Thanks to Kalman filter
 
     /**
      * Use the sensor type to perform the update step.
